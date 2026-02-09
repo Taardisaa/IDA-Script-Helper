@@ -58,11 +58,33 @@ def _extract_argument_identifiers(args_node: Node, source: bytes) -> list[str]:
     return identifiers
 
 
+_PREFIX_EXPANSIONS = {
+    "get_": "Retrieve",
+    "set_": "Set",
+    "del_": "Delete",
+    "delete_": "Delete",
+    "add_": "Add",
+    "is_": "Check if",
+    "has_": "Check if has",
+    "create_": "Create",
+    "find_": "Find",
+    "open_": "Open",
+    "close_": "Close",
+    "read_": "Read",
+    "write_": "Write",
+    "update_": "Update",
+    "remove_": "Remove",
+    "init_": "Initialize",
+    "show_": "Show",
+    "list_": "List",
+}
+
+
 def _generate_description(
     function_name: str, api_names: set[str], source_snippet: str
 ) -> str:
     """Auto-generate a workflow description from available context."""
-    # Extract C-style comment or /// comments above the method if present
+    # Extract /** ... */ Doxygen comments
     comment_match = re.search(
         r'/\*\*(.*?)\*/', source_snippet, re.DOTALL
     )
@@ -71,6 +93,16 @@ def _generate_description(
         comment = re.sub(r'\s*\*\s*', ' ', comment).strip()
         comment = re.sub(r'@\w+.*', '', comment).strip()
         if comment:
+            return comment
+
+    # Try /* ... */ plain C-style block comments
+    block_match = re.search(
+        r'/\*(.*?)\*/', source_snippet, re.DOTALL
+    )
+    if block_match:
+        comment = block_match.group(1)
+        comment = re.sub(r'\s*\*\s*', ' ', comment).strip()
+        if len(comment) > 5:
             return comment
 
     # Try /// style comments
@@ -84,8 +116,14 @@ def _generate_description(
     if doc_lines:
         return " ".join(doc_lines).strip()
 
-    # Fall back to function name + API names
-    # Convert snake_case and CamelCase to words
+    # Fall back: expand common prefixes to natural language
+    base_name = function_name.split("::")[-1]
+    for prefix, verb in _PREFIX_EXPANSIONS.items():
+        if base_name.startswith(prefix):
+            rest = base_name[len(prefix):].replace("_", " ")
+            return f"{verb} {rest}"
+
+    # Last resort: function name words + API list
     words = function_name.replace("::", " ").replace("_", " ").strip()
     api_list = ", ".join(sorted(api_names))
     return f"{words} using {api_list}"

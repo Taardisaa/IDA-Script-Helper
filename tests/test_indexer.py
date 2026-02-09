@@ -34,13 +34,25 @@ def test_workflows(fixtures_dir):
     return all_workflows
 
 
+TEST_API_BRIEFS = {
+    "get_func": "Get pointer to function structure by address",
+    "get_screen_ea": "Get linear address of current screen cursor",
+    "get_func_name": "Get function name by address",
+    "msg": "Output a formatted string to the message window",
+    "get_entry_qty": "Get number of entry points",
+    "get_entry_ordinal": "Get entry point ordinal number",
+    "get_entry": "Get entry point address by its ordinal",
+    "get_entry_name": "Get name of entry point by ordinal",
+}
+
+
 @pytest.fixture
 def indexed_db(test_workflows):
     """Create a temporary ChromaDB with indexed test workflows."""
     with tempfile.TemporaryDirectory() as tmpdir:
         db_path = Path(tmpdir) / "test_chroma"
         client = get_client(db_path)
-        build_workflow_index(client, test_workflows)
+        build_workflow_index(client, test_workflows, api_briefs=TEST_API_BRIEFS)
         build_api_docs_index(client, test_workflows)
         yield db_path
 

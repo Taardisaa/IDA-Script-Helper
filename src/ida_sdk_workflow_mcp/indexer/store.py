@@ -24,8 +24,21 @@ def get_client(db_path: Path) -> chromadb.ClientAPI:
 def build_workflow_index(
     client: chromadb.ClientAPI,
     workflows: list[Workflow],
+    api_briefs: dict[str, str] | None = None,
 ) -> None:
-    """Ingest extracted workflows into ChromaDB."""
+    """Ingest extracted workflows into ChromaDB.
+
+    Args:
+        client: ChromaDB client.
+        workflows: List of extracted workflows.
+        api_briefs: Optional mapping of API name -> brief description
+            from header docs, injected into each workflow before embedding.
+    """
+    # Inject API briefs into workflows so to_embedding_text() can use them
+    if api_briefs:
+        for w in workflows:
+            w.api_briefs = api_briefs
+
     try:
         client.delete_collection(WORKFLOWS_COLLECTION)
     except Exception:
@@ -169,6 +182,13 @@ def build_api_docs_index(
     logger.info("Indexed %d API doc entries into ChromaDB", len(api_info))
 
 
+def _infer_language(file_path: str) -> str:
+    """Infer language from file extension."""
+    if file_path.endswith(".py"):
+        return "python"
+    return "cpp"
+
+
 def _workflow_to_metadata(w: Workflow) -> dict:
     """Convert a Workflow to ChromaDB metadata dict."""
     return {
@@ -176,6 +196,7 @@ def _workflow_to_metadata(w: Workflow) -> dict:
         "file_path": w.file_path,
         "trust_level": w.trust_level.value,
         "category": w.category,
+        "language": _infer_language(w.file_path),
         "num_calls": len(w.calls),
         "apis_used": ",".join(sorted(w.api_names_used)),
         "description": w.description[:500],

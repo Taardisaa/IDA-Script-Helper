@@ -60,6 +60,7 @@ class Workflow:
     category: str
     api_names_used: set[str] = field(default_factory=set)
     description: str = ""
+    api_briefs: dict[str, str] = field(default_factory=dict)  # api_name -> brief description
 
     @property
     def id(self) -> str:
@@ -97,16 +98,21 @@ class Workflow:
 
     def to_embedding_text(self) -> str:
         """Generate text used for semantic embedding/search."""
-        api_list = ", ".join(sorted(self.api_names_used))
-        call_list = " -> ".join(
-            f"{c.class_name}::{c.method_name}" if c.class_name else c.method_name
-            for c in self.calls
-        )
         parts = []
         if self.description:
             parts.append(f"IDA SDK workflow: {self.description}.")
-        parts.append(f"APIs: {api_list}.")
-        parts.append(f"Call chain: {call_list}.")
+
+        # Build step descriptions with API briefs when available
+        steps = []
+        for c in self.calls:
+            name = f"{c.class_name}::{c.method_name}" if c.class_name else c.method_name
+            brief = self.api_briefs.get(c.method_name, "")
+            if brief:
+                steps.append(f"{name} ({brief})")
+            else:
+                steps.append(name)
+        parts.append(f"Steps: {' -> '.join(steps)}.")
+
         parts.append(f"Source function: {self.function_name}")
         return " ".join(parts)
 

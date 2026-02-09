@@ -102,7 +102,25 @@ def test_workflow_embedding_text(fixtures_dir):
     text = w.to_embedding_text()
 
     assert "get_func" in text
-    assert "Call chain:" in text
+    assert "Steps:" in text
+
+
+def test_workflow_embedding_text_with_briefs(fixtures_dir):
+    """to_embedding_text() should include API briefs when available."""
+    sf = _make_source_file(fixtures_dir / "decompile_plugin.cpp")
+    config = Config()
+    workflows = extract_workflows_from_source(sf, KNOWN_API_NAMES, config)
+
+    w = [w for w in workflows if "run" in w.function_name][0]
+    w.api_briefs = {
+        "get_func": "Get pointer to function structure by address",
+        "get_screen_ea": "Get linear address of current screen cursor",
+    }
+    text = w.to_embedding_text()
+
+    assert "Get pointer to function structure by address" in text
+    assert "get_func" in text
+    assert "Steps:" in text
 
 
 def test_workflow_id_is_stable(fixtures_dir):

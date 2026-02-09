@@ -9,6 +9,7 @@ from pathlib import Path
 @dataclass
 class Config:
     sdk_path: Path | None = None
+    python_path: Path | None = None  # path to IDAPython directory
     version: str = ""  # e.g., "84" for IDA SDK 8.4
     db_base_path: Path = field(default_factory=lambda: Path("data/chroma_db"))
     max_files: int | None = None  # None = no limit
