@@ -47,15 +47,22 @@ def find_function_bodies(
 
     Includes:
     - All top-level ``def`` statements
+    - Methods inside top-level classes (named ``ClassName.method_name``)
     - A pseudo-function ``<module>`` for top-level code (statements not inside
       any function/class), so script-style examples get processed too.
     """
     results: list[tuple[str, ast.AST]] = []
 
-    # Collect top-level function defs
     for node in ast.iter_child_nodes(tree):
-        if isinstance(node, ast.FunctionDef) or isinstance(node, ast.AsyncFunctionDef):
+        # Top-level function defs
+        if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
             results.append((node.name, node))
+
+        # Methods inside top-level classes
+        elif isinstance(node, ast.ClassDef):
+            for item in ast.iter_child_nodes(node):
+                if isinstance(item, (ast.FunctionDef, ast.AsyncFunctionDef)):
+                    results.append((f"{node.name}.{item.name}", item))
 
     # Build a pseudo-function for module-level statements
     # (everything that is not a function/class def or import)

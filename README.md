@@ -207,9 +207,22 @@ Add to `~/.config/Claude/claude_desktop_config.json` (Linux), `~/Library/Applica
 
 | Metric | C++ | Python | Combined |
 |--------|-----|--------|----------|
-| Source files | 356 | ~89 examples | ~445 |
-| Extracted workflows | 921 | varies | 900+ |
-| API doc entries | 1,443 (from headers) | ~3,153 (from stubs) | ~1,700 (merged, deduplicated) |
+| Source files | 356 | 89 examples | 445 |
+| Extracted workflows | 921 | 112 | 1,033 |
+| API calls captured | — | 505 | — |
+| Data-flow edges | — | 143 | — |
+| API doc entries | 1,443 (from headers) | 8,060 (from stubs) | 8,491 (merged) |
+
+### Python extraction coverage
+
+63 of 89 IDAPython example scripts (71%) produce at least one workflow. The remaining 26 break down as:
+
+| Category | Count | Notes |
+|----------|------:|-------|
+| No IDA API calls at all | 10 | Hook skeletons, config files, pure boilerplate |
+| Single API call (below min-2 threshold) | 8 | Trivial one-liners, no meaningful workflow |
+| 2 calls spread across separate class methods | 6 | Each method has only 1 call; no single function reaches threshold |
+| Non-standard import pattern | 2 | e.g., `from Choose import Choose` — not an `ida_*` module |
 
 ## Project Structure
 
