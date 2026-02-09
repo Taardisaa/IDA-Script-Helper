@@ -235,7 +235,11 @@ def build_api_names_from_stubs(python_dir: Path) -> tuple[set[str], dict[str, se
 
 
 def _extract_function_names(path: Path) -> set[str]:
-    """Extract top-level function names from a Python file using ast."""
+    """Extract top-level function and class names from a Python file using ast.
+
+    Class names are included because IDAPython examples frequently call
+    constructors via module-qualified syntax (e.g., ``ida_gdl.FlowChart(f)``).
+    """
     try:
         source = path.read_text(encoding="utf-8", errors="replace")
         tree = ast.parse(source)
@@ -245,5 +249,7 @@ def _extract_function_names(path: Path) -> set[str]:
     names: set[str] = set()
     for node in ast.iter_child_nodes(tree):
         if isinstance(node, ast.FunctionDef) and not _should_skip(node.name):
+            names.add(node.name)
+        elif isinstance(node, ast.ClassDef) and not _should_skip(node.name):
             names.add(node.name)
     return names
