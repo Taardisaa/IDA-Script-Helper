@@ -2,6 +2,10 @@
 
 An MCP server that helps LLMs write correct IDA Pro scripts by providing **API workflow retrieval** — not just individual function docs, but the correct **call sequences** extracted from real IDA SDK source code and IDAPython examples.
 
+## Current Status
+
+Tested on IDA Pro 8.4 SDK and corresponding IDAPython version. Since the parser backend is based on tree-sitter for C++ and Python's built-in `ast` module for IDAPython, minor adjustments would be required to support parsing other versions of the SDK examples.
+
 ## The Problem
 
 LLMs frequently get IDA SDK API call sequences wrong. Listing cross-references isn't a single API call — it requires calling `get_screen_ea()`, obtaining a `func_t*` with `get_func()`, iterating with `xrefblk_t::first_to()` / `xrefblk_t::next_to()`, and formatting output with `get_name()` and `msg()`. Miss any step and the script silently fails.
@@ -126,7 +130,7 @@ ida-sdk-mcp-admin inspect "enumerate file imports"
 #### Claude Code
 
 ```bash
-claude mcp add ida-sdk-workflow -- uv run --directory /path/to/IDA-Sdk-Workflow-MCP ida-sdk-mcp
+claude mcp add ida-sdk-workflow /path/to/IDA-Sdk-Workflow-MCP/.venv/bin/ida-sdk-mcp
 ```
 
 Or create a `.mcp.json` file in the project root:
@@ -135,8 +139,8 @@ Or create a `.mcp.json` file in the project root:
 {
   "mcpServers": {
     "ida-sdk-workflow": {
-      "command": "uv",
-      "args": ["run", "--directory", "/path/to/IDA-Sdk-Workflow-MCP", "ida-sdk-mcp"]
+      "command": "/path/to/IDA-Sdk-Workflow-MCP/.venv/bin/ida-sdk-mcp",
+      "args": []
     }
   }
 }
@@ -150,8 +154,8 @@ Add to `~/.config/Claude/claude_desktop_config.json` (Linux), `~/Library/Applica
 {
   "mcpServers": {
     "ida-sdk-workflow": {
-      "command": "uv",
-      "args": ["run", "--directory", "/path/to/IDA-Sdk-Workflow-MCP", "ida-sdk-mcp"]
+      "command": "/path/to/IDA-Sdk-Workflow-MCP/.venv/bin/ida-sdk-mcp",
+      "args": []
     }
   }
 }
