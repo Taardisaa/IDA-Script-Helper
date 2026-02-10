@@ -1,12 +1,18 @@
-# IDA SDK Workflow MCP
+# IDA Script Helper: Writing IDA scripts easily with MCP tools
 
-An MCP server that helps LLMs write correct IDA Pro scripts by providing **API workflow retrieval** — not just individual function docs, but the correct **call sequences** extracted from real IDA SDK source code and IDAPython examples.
+This is an MCP server that helps agents write correct IDA Pro scripts by retrieving **API call sequences** from real IDA SDK source code and IDAPython examples.
 
-## Current Status
+> **Current Status**: Tested on IDA Pro 8.4 SDK and corresponding IDAPython version. Since the parser backend is based on tree-sitter for C++ and Python's built-in `ast` module for IDAPython, minor adjustments would be required to support parsing other versions of the SDK examples.
 
-Tested on IDA Pro 8.4 SDK and corresponding IDAPython version. Since the parser backend is based on tree-sitter for C++ and Python's built-in `ast` module for IDAPython, minor adjustments would be required to support parsing other versions of the SDK examples.
+## Example Use Case
 
-## The Problem
+When enabled as an MCP server for an agent like Claude Code, you can ask: 
+> Under the examples/ dir, write an IDAPython script that lists all functions   
+  within the .text section, and then print it out in the console. Name  the script "list_all_text_funcs.py".
+
+Then the agent can query this toolset to find a proper workflow (API call sequence) that accomplishes this task, and retrieve API docs to understand how to use each function correctly. In the end, the agent can generate a complete script that follows the correct sequence of API calls, with proper arguments and data flow.
+
+## Problem Statement
 
 LLMs frequently get IDA SDK API call sequences wrong. Listing cross-references isn't a single API call — it requires calling `get_screen_ea()`, obtaining a `func_t*` with `get_func()`, iterating with `xrefblk_t::first_to()` / `xrefblk_t::next_to()`, and formatting output with `get_name()` and `msg()`. Miss any step and the script silently fails.
 
