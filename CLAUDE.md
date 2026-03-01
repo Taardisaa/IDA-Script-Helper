@@ -13,6 +13,17 @@ This project provides an MCP server that indexes IDA Pro SDK call sequences and 
 3. **`list_related_apis`** — If the workflow seems incomplete or you need companion functions, find co-occurring APIs.
 4. **`get_versions` / `select_version`** — Check and switch SDK versions if the user specifies a particular IDA version.
 
+### Handling uninitialized index
+
+The MCP tools require a built index to function. If any tool returns a message starting with **"NO INDEX INITIALIZED"**, do NOT treat this as an error or broken tool. Instead:
+
+1. **Tell the user** the index needs to be built before IDA API queries will work.
+2. **Ask the user** for the path to their IDA SDK directory (e.g., `/path/to/idasdk84`).
+3. **Call `initialize_index()`** with their SDK path and version string (e.g., `"84"` for IDA 8.4).
+4. Building the index takes a few minutes — inform the user it's in progress.
+
+You can call **`get_versions()`** first as a quick health check to see if any versions are indexed.
+
 ### When to invoke these tools automatically
 
 - User asks to "write an IDA script", "create an IDA plugin", or anything involving IDA Pro scripting

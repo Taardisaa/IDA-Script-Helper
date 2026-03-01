@@ -159,6 +159,13 @@ ida-api-mcp-admin clear-index --version 84
 claude mcp add ida-api-mcp -- uvx --python python3.10 ida-api-mcp
 ```
 
+Or global (user-wide)
+
+```bash
+# user-wide (global)
+claude mcp add -s user ida-api-mcp -- uvx --python python3.10 ida-api-mcp
+```
+
 Or create a `.mcp.json` file in the project root:
 
 ```json

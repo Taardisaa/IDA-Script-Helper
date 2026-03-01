@@ -122,3 +122,30 @@ def test_clear_index(server_with_index):
 def test_initialize_index_failure_message():
     result = initialize_index("/does/not/exist", "84")
     assert "Failed to build index" in result
+
+
+def test_no_index_returns_initialization_guidance():
+    """When no index exists, query tools return guidance instead of raising."""
+    with tempfile.TemporaryDirectory() as tmpdir:
+        with (
+            patch("ida_api_mcp.server._searcher", None),
+            patch("ida_api_mcp.server._active_version", None),
+            patch(
+                "ida_api_mcp.server._config", Config(db_base_path=Path(tmpdir))
+            ),
+        ):
+            result = get_workflows("get function")
+            assert "NO INDEX INITIALIZED" in result
+            assert "initialize_index()" in result
+
+            result = get_api_doc("get_func")
+            assert "NO INDEX INITIALIZED" in result
+
+            result = list_related_apis("get_func")
+            assert "NO INDEX INITIALIZED" in result
+
+            result = get_versions()
+            assert "NO INDEX INITIALIZED" in result
+
+            result = get_index_info()
+            assert "NO INDEX INITIALIZED" in result

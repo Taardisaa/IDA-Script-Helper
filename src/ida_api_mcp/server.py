@@ -28,10 +28,23 @@ _active_version: str | None = None
 _searcher: WorkflowSearcher | None = None
 
 
-def _get_searcher() -> WorkflowSearcher:
+_NO_INDEX_MESSAGE = (
+    "NO INDEX INITIALIZED. "
+    "No IDA SDK versions have been indexed yet. "
+    "Before using any query tools, the index must be built.\n\n"
+    "To initialize, call the initialize_index() tool with:\n"
+    "  - sdk_path: Absolute path to your IDA SDK directory (e.g., /path/to/idasdk84)\n"
+    "  - version: SDK version string (e.g., \"84\" for IDA 8.4)\n"
+    "  - python_path (optional): Path to IDAPython stubs directory\n\n"
+    "Ask the user for their IDA SDK path if you don't know it."
+)
+
+
+def _get_searcher() -> WorkflowSearcher | None:
     """Get or create a searcher for the active version.
 
     On first call, auto-selects the highest indexed version.
+    Returns None if no index has been built yet.
     """
     global _searcher, _active_version
     if _searcher is not None:
@@ -41,10 +54,7 @@ def _get_searcher() -> WorkflowSearcher:
         _active_version = get_default_version(_config.db_base_path)
 
     if _active_version is None:
-        raise RuntimeError(
-            "No indexed SDK versions found. "
-            "Run: ida-api-mcp-admin build-index --sdk-path <path> --version <ver>"
-        )
+        return None
 
     db_path = _config.db_base_path / f"v{_active_version}"
     _searcher = WorkflowSearcher(db_path)
@@ -64,10 +74,12 @@ def get_versions() -> str:
     """List all indexed IDA SDK versions and show which is currently active.
 
     Returns a list of available SDK versions with the active one marked.
+    Call this first to verify the index is ready before using query tools.
+    If no versions are indexed, returns instructions for initializing.
     """
     versions = list_versions(_config.db_base_path)
     if not versions:
-        return "No indexed SDK versions found."
+        return _NO_INDEX_MESSAGE
 
     active = _active_version or get_default_version(_config.db_base_path)
     lines = ["Indexed IDA SDK versions:"]
@@ -106,11 +118,17 @@ def get_workflows(task_description: str) -> str:
     sequence for accomplishing the described task. Each result includes
     ordered API calls with data-flow dependencies and source code.
 
+    Requires an initialized index. If no index exists, returns
+    initialization instructions. Use get_versions() to check
+    availability, or initialize_index() to build one.
+
     Args:
         task_description: Natural language description of what you want
                           to accomplish, e.g. "get the function at an address"
     """
     searcher = _get_searcher()
+    if searcher is None:
+        return _NO_INDEX_MESSAGE
     results = searcher.search_workflows(task_description, n_results=3)
 
     if not results:
@@ -134,11 +152,17 @@ def get_api_doc(name: str) -> str:
 
     Supports fuzzy and partial matching — no fully qualified name needed.
 
+    Requires an initialized index. If no index exists, returns
+    initialization instructions. Use get_versions() to check
+    availability, or initialize_index() to build one.
+
     Args:
         name: Function name, struct name, or keyword to search for.
               Examples: "get_func", "func_t", "xrefblk_t"
     """
     searcher = _get_searcher()
+    if searcher is None:
+        return _NO_INDEX_MESSAGE
     results = searcher.get_api_doc(name, n_results=5)
 
     if not results:
@@ -174,10 +198,16 @@ def list_related_apis(name: str) -> str:
 
     Returns co-occurring APIs based on real usage patterns in SDK source code.
 
+    Requires an initialized index. If no index exists, returns
+    initialization instructions. Use get_versions() to check
+    availability, or initialize_index() to build one.
+
     Args:
         name: An IDA SDK function or type name, e.g. "get_func"
     """
     searcher = _get_searcher()
+    if searcher is None:
+        return _NO_INDEX_MESSAGE
     result = searcher.list_related_apis(name)
 
     if not result["related"]:
@@ -207,7 +237,7 @@ def get_index_info() -> str:
 
     version = _get_active_or_default_version()
     if version is None:
-        return "No indexed SDK versions found."
+        return _NO_INDEX_MESSAGE
 
     info = _get_info(get_client(_config.db_base_path / f"v{version}"))
 
@@ -237,7 +267,7 @@ def clear_index(version: str = "") -> str:
 
     target_version = version.strip() if version else _get_active_or_default_version()
     if target_version is None:
-        return "No indexed SDK versions found."
+        return _NO_INDEX_MESSAGE
 
     if not validate_version(_config.db_base_path, target_version):
         available = list_versions(_config.db_base_path)
