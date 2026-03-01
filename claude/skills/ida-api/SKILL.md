@@ -14,7 +14,7 @@ auto_invoke:
 
 # IDA API Lookup
 
-Look up IDA SDK API documentation using the `ida-sdk-workflow` MCP tools. Operates in three modes depending on what the user asks for.
+Look up IDA SDK API documentation using the `ida-api-mcp` MCP tools. Operates in three modes depending on what the user asks for.
 
 ## Mode 1: Named API lookup
 

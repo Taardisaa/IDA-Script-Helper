@@ -6,8 +6,8 @@ import logging
 import re
 from pathlib import Path
 
-from ida_sdk_workflow_mcp.config import Config
-from ida_sdk_workflow_mcp.extractor.models import SourceFile, TrustLevel
+from ida_api_mcp.config import Config
+from ida_api_mcp.extractor.models import SourceFile, TrustLevel
 
 logger = logging.getLogger(__name__)
 

@@ -4,7 +4,7 @@ This project provides an MCP server that indexes IDA Pro SDK call sequences and 
 
 ## Behavioral Rules
 
-**ALWAYS consult the `ida-sdk-workflow` MCP tools before writing any IDA-related code.** Do not rely on training data for IDA API usage — the SDK changes between versions and training data is frequently wrong. The MCP tools contain ground-truth workflows extracted from official SDK source code.
+**ALWAYS consult the `ida-api-mcp` MCP tools before writing any IDA-related code.** Do not rely on training data for IDA API usage — the SDK changes between versions and training data is frequently wrong. The MCP tools contain ground-truth workflows extracted from official SDK source code.
 
 ### Required workflow when writing IDA code
 

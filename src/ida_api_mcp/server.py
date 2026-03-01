@@ -8,9 +8,9 @@ from pathlib import Path
 
 from mcp.server.fastmcp import FastMCP
 
-from ida_sdk_workflow_mcp.config import Config
-from ida_sdk_workflow_mcp.indexer.search import WorkflowSearcher
-from ida_sdk_workflow_mcp.version_manager import (
+from ida_api_mcp.config import Config
+from ida_api_mcp.indexer.search import WorkflowSearcher
+from ida_api_mcp.version_manager import (
     get_default_version,
     list_versions,
     validate_version,
@@ -20,7 +20,7 @@ from ida_sdk_workflow_mcp.version_manager import (
 logging.basicConfig(level=logging.INFO, stream=sys.stderr)
 logger = logging.getLogger(__name__)
 
-mcp = FastMCP("ida-sdk-workflow")
+mcp = FastMCP("ida-api-mcp")
 
 # State: active version and lazy-initialized searcher
 _config = Config()
@@ -43,12 +43,20 @@ def _get_searcher() -> WorkflowSearcher:
     if _active_version is None:
         raise RuntimeError(
             "No indexed SDK versions found. "
-            "Run: ida-sdk-mcp-admin build-index --sdk-path <path> --version <ver>"
+            "Run: ida-api-mcp-admin build-index --sdk-path <path> --version <ver>"
         )
 
     db_path = _config.db_base_path / f"v{_active_version}"
     _searcher = WorkflowSearcher(db_path)
     return _searcher
+
+
+def _get_active_or_default_version() -> str | None:
+    """Return active version or auto-selected highest indexed version."""
+    global _active_version
+    if _active_version is None:
+        _active_version = get_default_version(_config.db_base_path)
+    return _active_version
 
 
 @mcp.tool()
@@ -186,6 +194,107 @@ def list_related_apis(name: str) -> str:
         )
 
     return "\n".join(output_parts)
+
+
+@mcp.tool()
+def get_index_info() -> str:
+    """Return metadata about the currently indexed SDK version.
+
+    Shows version, build timestamp, and counts for workflows and API docs.
+    """
+    from ida_api_mcp.indexer.store import get_client
+    from ida_api_mcp.indexer.store import get_index_info as _get_info
+
+    version = _get_active_or_default_version()
+    if version is None:
+        return "No indexed SDK versions found."
+
+    info = _get_info(get_client(_config.db_base_path / f"v{version}"))
+
+    if info["workflow_count"] == 0 and info["api_doc_count"] == 0:
+        return f"Index for SDK v{version} is empty. Run initialize_index() to build it."
+
+    return (
+        f"SDK version    : v{version}\n"
+        f"Indexed at     : {info['indexed_at']}\n"
+        f"Workflows      : {info['workflow_count']}\n"
+        f"API docs       : {info['api_doc_count']}"
+    )
+
+
+@mcp.tool()
+def clear_index(version: str = "") -> str:
+    """Delete index collections for one indexed SDK version.
+
+    Args:
+        version: Optional SDK version string. If omitted, clears the active
+                 version (or highest indexed version if none selected).
+    """
+    from ida_api_mcp.indexer.store import clear_index as _clear
+    from ida_api_mcp.indexer.store import get_client
+
+    global _active_version, _searcher
+
+    target_version = version.strip() if version else _get_active_or_default_version()
+    if target_version is None:
+        return "No indexed SDK versions found."
+
+    if not validate_version(_config.db_base_path, target_version):
+        available = list_versions(_config.db_base_path)
+        return (
+            f"Version '{target_version}' is not indexed. "
+            f"Available: {', '.join(available) if available else 'none'}"
+        )
+
+    _clear(get_client(_config.db_base_path / f"v{target_version}"))
+
+    if _active_version == target_version:
+        _searcher = None
+
+    return (
+        f"Index for SDK v{target_version} cleared. Run initialize_index() to rebuild."
+    )
+
+
+@mcp.tool()
+def initialize_index(
+    sdk_path: str,
+    version: str,
+    python_path: str = "",
+    max_files: int = 0,
+) -> str:
+    """Build the IDA SDK workflow index.
+
+    Args:
+        sdk_path: Absolute path to an IDA SDK directory.
+        version: SDK version string (e.g., "84").
+        python_path: Optional path to IDAPython directory.
+        max_files: Optional file limit for testing; use 0 for no limit.
+    """
+    from ida_api_mcp.pipeline import build_index_pipeline
+
+    global _active_version, _searcher
+
+    sdk_root = Path(sdk_path)
+    py_root = Path(python_path) if python_path else None
+    file_limit = max_files if max_files > 0 else None
+    messages: list[str] = []
+
+    try:
+        build_index_pipeline(
+            sdk_path=sdk_root,
+            version=version,
+            python_path=py_root,
+            db_base_path=_config.db_base_path,
+            max_files=file_limit,
+            progress=messages.append,
+        )
+    except Exception as exc:
+        return f"Failed to build index: {exc}"
+
+    _active_version = version
+    _searcher = None
+    return "\n".join(messages)
 
 
 def run_server():

@@ -1,6 +1,6 @@
 """Tests for the tree-sitter C++ parser module."""
 
-from ida_sdk_workflow_mcp.parser.cpp_parser import (
+from ida_api_mcp.parser.cpp_parser import (
     find_base_classes,
     find_function_bodies,
     find_includes,

@@ -2,9 +2,9 @@
 
 from pathlib import Path
 
-from ida_sdk_workflow_mcp.config import Config
-from ida_sdk_workflow_mcp.extractor.call_chain import extract_workflows_from_source
-from ida_sdk_workflow_mcp.extractor.models import SourceFile, TrustLevel
+from ida_api_mcp.config import Config
+from ida_api_mcp.extractor.call_chain import extract_workflows_from_source
+from ida_api_mcp.extractor.models import SourceFile, TrustLevel
 
 
 def _make_source_file(path: Path, trust: TrustLevel = TrustLevel.HIGHEST) -> SourceFile:

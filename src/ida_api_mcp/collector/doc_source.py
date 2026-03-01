@@ -10,9 +10,9 @@ from __future__ import annotations
 import logging
 from pathlib import Path
 
-from ida_sdk_workflow_mcp.config import Config
-from ida_sdk_workflow_mcp.extractor.models import HeaderApiDoc
-from ida_sdk_workflow_mcp.parser.html_parser import parse_header_file
+from ida_api_mcp.config import Config
+from ida_api_mcp.extractor.models import HeaderApiDoc
+from ida_api_mcp.parser.html_parser import parse_header_file
 
 logger = logging.getLogger(__name__)
 

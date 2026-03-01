@@ -10,14 +10,14 @@ import ast
 import logging
 import re
 
-from ida_sdk_workflow_mcp.config import Config
-from ida_sdk_workflow_mcp.extractor.models import (
+from ida_api_mcp.config import Config
+from ida_api_mcp.extractor.models import (
     ApiCall,
     DataFlowEdge,
     SourceFile,
     Workflow,
 )
-from ida_sdk_workflow_mcp.parser.python_parser import (
+from ida_api_mcp.parser.python_parser import (
     extract_metadata,
     find_function_bodies,
     find_imports,

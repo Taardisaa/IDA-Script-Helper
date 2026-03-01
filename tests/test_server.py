@@ -6,27 +6,39 @@ from unittest.mock import patch
 
 import pytest
 
-from ida_sdk_workflow_mcp.config import Config
-from ida_sdk_workflow_mcp.extractor.call_chain import extract_workflows_from_source
-from ida_sdk_workflow_mcp.extractor.models import SourceFile, TrustLevel
-from ida_sdk_workflow_mcp.indexer.search import WorkflowSearcher
-from ida_sdk_workflow_mcp.indexer.store import (
+from ida_api_mcp.config import Config
+from ida_api_mcp.extractor.call_chain import extract_workflows_from_source
+from ida_api_mcp.extractor.models import SourceFile, TrustLevel
+from ida_api_mcp.indexer.search import WorkflowSearcher
+from ida_api_mcp.indexer.store import (
     build_api_docs_index,
     build_workflow_index,
     get_client,
 )
-from ida_sdk_workflow_mcp.server import (
+from ida_api_mcp.server import (
+    clear_index,
     get_api_doc,
+    get_index_info,
     get_versions,
     get_workflows,
+    initialize_index,
     list_related_apis,
     select_version,
 )
 
 KNOWN_API_NAMES = {
-    "get_screen_ea", "get_func", "get_func_name", "msg",
-    "get_name", "get_entry_qty", "get_entry_ordinal", "get_entry",
-    "get_entry_name", "jumpto", "auto_is_ok", "ask_yn",
+    "get_screen_ea",
+    "get_func",
+    "get_func_name",
+    "msg",
+    "get_name",
+    "get_entry_qty",
+    "get_entry_ordinal",
+    "get_entry",
+    "get_entry_name",
+    "jumpto",
+    "auto_is_ok",
+    "ask_yn",
 }
 
 FIXTURES_DIR = Path(__file__).parent / "fixtures"
@@ -50,9 +62,13 @@ def server_with_index():
         build_api_docs_index(client, all_workflows)
 
         searcher = WorkflowSearcher(db_path)
-        with patch("ida_sdk_workflow_mcp.server._searcher", searcher), \
-             patch("ida_sdk_workflow_mcp.server._active_version", "84"), \
-             patch("ida_sdk_workflow_mcp.server._config", Config(db_base_path=Path(tmpdir))):
+        with (
+            patch("ida_api_mcp.server._searcher", searcher),
+            patch("ida_api_mcp.server._active_version", "84"),
+            patch(
+                "ida_api_mcp.server._config", Config(db_base_path=Path(tmpdir))
+            ),
+        ):
             yield
 
 
@@ -90,3 +106,19 @@ def test_select_version_valid(server_with_index):
 def test_select_version_invalid(server_with_index):
     result = select_version("999")
     assert "not indexed" in result
+
+
+def test_get_index_info(server_with_index):
+    result = get_index_info()
+    assert "SDK version" in result
+    assert "Workflows" in result
+
+
+def test_clear_index(server_with_index):
+    result = clear_index("84")
+    assert "cleared" in result.lower()
+
+
+def test_initialize_index_failure_message():
+    result = initialize_index("/does/not/exist", "84")
+    assert "Failed to build index" in result

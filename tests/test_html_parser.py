@@ -2,7 +2,7 @@
 
 from pathlib import Path
 
-from ida_sdk_workflow_mcp.parser.html_parser import parse_header_file
+from ida_api_mcp.parser.html_parser import parse_header_file
 
 FIXTURES_DIR = Path(__file__).parent / "fixtures"
 

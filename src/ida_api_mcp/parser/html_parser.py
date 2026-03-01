@@ -11,7 +11,7 @@ from __future__ import annotations
 import re
 from pathlib import Path
 
-from ida_sdk_workflow_mcp.extractor.models import HeaderApiDoc
+from ida_api_mcp.extractor.models import HeaderApiDoc
 
 # Pattern: optional /// comment lines, followed by idaman <ret> ida_export <name>(<params>);
 _IDAMAN_FUNC_RE = re.compile(

@@ -2,7 +2,7 @@
 
 from pathlib import Path
 
-from ida_sdk_workflow_mcp.parser.stub_parser import (
+from ida_api_mcp.parser.stub_parser import (
     build_api_names_from_stubs,
     parse_stub_file,
 )

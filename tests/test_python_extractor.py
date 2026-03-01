@@ -5,12 +5,12 @@ from pathlib import Path
 
 import pytest
 
-from ida_sdk_workflow_mcp.config import Config
-from ida_sdk_workflow_mcp.extractor.models import SourceFile, TrustLevel
-from ida_sdk_workflow_mcp.extractor.python_call_chain import (
+from ida_api_mcp.config import Config
+from ida_api_mcp.extractor.models import SourceFile, TrustLevel
+from ida_api_mcp.extractor.python_call_chain import (
     extract_workflows_from_python,
 )
-from ida_sdk_workflow_mcp.parser.stub_parser import build_api_names_from_stubs
+from ida_api_mcp.parser.stub_parser import build_api_names_from_stubs
 
 
 def _make_source_file(path: Path) -> SourceFile:

@@ -13,7 +13,7 @@ auto_invoke:
 
 # Write IDA Script
 
-Write an IDAPython script by first consulting the `ida-sdk-workflow` MCP tools to retrieve verified API call sequences, then composing the script from those patterns.
+Write an IDAPython script by first consulting the `ida-api-mcp` MCP tools to retrieve verified API call sequences, then composing the script from those patterns.
 
 ## Process
 

@@ -8,7 +8,7 @@ from pathlib import Path
 
 import chromadb
 
-from ida_sdk_workflow_mcp.indexer.store import (
+from ida_api_mcp.indexer.store import (
     API_DOCS_COLLECTION,
     WORKFLOWS_COLLECTION,
     get_client,

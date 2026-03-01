@@ -3,7 +3,7 @@
 import tempfile
 from pathlib import Path
 
-from ida_sdk_workflow_mcp.version_manager import (
+from ida_api_mcp.version_manager import (
     get_default_version,
     list_versions,
     validate_version,

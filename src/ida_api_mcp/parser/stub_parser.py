@@ -12,7 +12,7 @@ import logging
 import re
 from pathlib import Path
 
-from ida_sdk_workflow_mcp.extractor.models import HeaderApiDoc
+from ida_api_mcp.extractor.models import HeaderApiDoc
 
 logger = logging.getLogger(__name__)
 

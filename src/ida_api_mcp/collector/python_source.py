@@ -11,9 +11,9 @@ from __future__ import annotations
 import logging
 from pathlib import Path
 
-from ida_sdk_workflow_mcp.config import Config
-from ida_sdk_workflow_mcp.extractor.models import HeaderApiDoc, SourceFile, TrustLevel
-from ida_sdk_workflow_mcp.parser.stub_parser import parse_stub_file
+from ida_api_mcp.config import Config
+from ida_api_mcp.extractor.models import HeaderApiDoc, SourceFile, TrustLevel
+from ida_api_mcp.parser.stub_parser import parse_stub_file
 
 logger = logging.getLogger(__name__)
 

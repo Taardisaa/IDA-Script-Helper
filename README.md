@@ -1,6 +1,6 @@
-# IDA Script Helper: Writing IDA scripts easily with MCP tools
+# ida-api-mcp
 
-This is an MCP server that helps agents write correct IDA Pro scripts by retrieving **API call sequences** from real IDA SDK source code and IDAPython examples.
+`ida-api-mcp` is an MCP server that helps agents write correct IDA Pro scripts by retrieving **API call sequences** from real IDA SDK source code and IDAPython examples.
 
 > **Current Status**: Tested on IDA Pro 8.4 SDK and corresponding IDAPython version. Since the parser backend is based on tree-sitter for C++ and Python's built-in `ast` module for IDAPython, minor adjustments would be required to support parsing other versions of the SDK examples.
 
@@ -34,6 +34,9 @@ This tool automatically extracts these workflow patterns from IDA's own SDK exam
 | `get_workflows` | Find API call sequences for a task | Natural-language task description |
 | `get_api_doc` | Look up a function, struct, or class (fuzzy match) | Function/type name or keyword |
 | `list_related_apis` | Find co-occurring APIs | Function or type name |
+| `get_index_info` | Show indexed version metadata and record counts | — |
+| `clear_index` | Delete index data for one version | Optional version string |
+| `initialize_index` | Build index from SDK path (and optional IDAPython path) | sdk_path, version, optional python_path |
 | `get_versions` | List all indexed SDK versions | — |
 | `select_version` | Switch active SDK version | Version string (e.g., `"84"`) |
 
@@ -93,7 +96,7 @@ python3.10 -m venv .venv
 #### C++ only (IDA SDK)
 
 ```bash
-ida-sdk-mcp-admin build-index \
+ida-api-mcp-admin build-index \
   --sdk-path /path/to/idasdk_pro84 \
   --version 84
 ```
@@ -101,7 +104,7 @@ ida-sdk-mcp-admin build-index \
 #### C++ + Python (IDA SDK + IDAPython)
 
 ```bash
-ida-sdk-mcp-admin build-index \
+ida-api-mcp-admin build-index \
   --sdk-path /path/to/idasdk_pro84 \
   --python-path /path/to/idapro-8.4/python \
   --version 84
@@ -125,10 +128,18 @@ The `--python-path` should point to the `python/` directory inside your IDA Pro 
 ### 2. Test queries
 
 ```bash
-ida-sdk-mcp-admin inspect "decompile a function"
-ida-sdk-mcp-admin inspect "cross references to an address"
-ida-sdk-mcp-admin inspect "list all functions in a segment"
-ida-sdk-mcp-admin inspect "enumerate file imports"
+ida-api-mcp-admin inspect workflows "decompile a function"
+ida-api-mcp-admin inspect workflows "cross references to an address"
+ida-api-mcp-admin inspect workflows "list all functions in a segment"
+ida-api-mcp-admin inspect workflows "enumerate file imports"
+
+# Inspect metadata and API docs from CLI:
+ida-api-mcp-admin inspect info --version 84
+ida-api-mcp-admin inspect api-doc get_func --version 84
+ida-api-mcp-admin inspect related get_func --version 84
+
+# Clear one indexed version:
+ida-api-mcp-admin clear-index --version 84
 ```
 
 ### 3. Add as MCP server
@@ -136,7 +147,7 @@ ida-sdk-mcp-admin inspect "enumerate file imports"
 #### Claude Code
 
 ```bash
-claude mcp add ida-sdk-workflow /path/to/IDA-Sdk-Workflow-MCP/.venv/bin/ida-sdk-mcp
+claude mcp add ida-api-mcp /path/to/IDA-Sdk-Workflow-MCP/.venv/bin/ida-api-mcp
 ```
 
 Or create a `.mcp.json` file in the project root:
@@ -144,8 +155,8 @@ Or create a `.mcp.json` file in the project root:
 ```json
 {
   "mcpServers": {
-    "ida-sdk-workflow": {
-      "command": "/path/to/IDA-Sdk-Workflow-MCP/.venv/bin/ida-sdk-mcp",
+    "ida-api-mcp": {
+      "command": "/path/to/IDA-Sdk-Workflow-MCP/.venv/bin/ida-api-mcp",
       "args": []
     }
   }
@@ -159,8 +170,8 @@ Add to `~/.config/Claude/claude_desktop_config.json` (Linux), `~/Library/Applica
 ```json
 {
   "mcpServers": {
-    "ida-sdk-workflow": {
-      "command": "/path/to/IDA-Sdk-Workflow-MCP/.venv/bin/ida-sdk-mcp",
+    "ida-api-mcp": {
+      "command": "/path/to/IDA-Sdk-Workflow-MCP/.venv/bin/ida-api-mcp",
       "args": []
     }
   }
@@ -172,9 +183,9 @@ Add to `~/.config/Claude/claude_desktop_config.json` (Linux), `~/Library/Applica
 ```json
 {
   "mcpServers": {
-    "ida-sdk-workflow": {
+    "ida-api-mcp": {
       "command": "uvx",
-      "args": ["ida-sdk-workflow-mcp"]
+      "args": ["ida-api-mcp"]
     }
   }
 }
@@ -237,7 +248,7 @@ Add to `~/.config/Claude/claude_desktop_config.json` (Linux), `~/Library/Applica
 ## Project Structure
 
 ```
-src/ida_sdk_workflow_mcp/
+src/ida_api_mcp/
 ├── server.py                       # MCP server (FastMCP, stdio transport)
 ├── cli.py                          # CLI: build-index, inspect, list-versions, serve
 ├── config.py                       # Configuration dataclass
@@ -263,7 +274,7 @@ src/ida_sdk_workflow_mcp/
 ## Development
 
 ```bash
-# Run tests (65 tests)
+# Run tests
 .venv/bin/pytest -v
 
 # Lint

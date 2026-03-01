@@ -5,20 +5,31 @@ from pathlib import Path
 
 import pytest
 
-from ida_sdk_workflow_mcp.config import Config
-from ida_sdk_workflow_mcp.extractor.call_chain import extract_workflows_from_source
-from ida_sdk_workflow_mcp.extractor.models import SourceFile, TrustLevel
-from ida_sdk_workflow_mcp.indexer.search import WorkflowSearcher
-from ida_sdk_workflow_mcp.indexer.store import (
+from ida_api_mcp.config import Config
+from ida_api_mcp.extractor.call_chain import extract_workflows_from_source
+from ida_api_mcp.extractor.models import SourceFile, TrustLevel
+from ida_api_mcp.indexer.search import WorkflowSearcher
+from ida_api_mcp.indexer.store import (
     build_api_docs_index,
     build_workflow_index,
+    clear_index,
     get_client,
+    get_index_info,
 )
 
 KNOWN_API_NAMES = {
-    "get_screen_ea", "get_func", "get_func_name", "msg",
-    "get_name", "get_entry_qty", "get_entry_ordinal", "get_entry",
-    "get_entry_name", "jumpto", "auto_is_ok", "ask_yn",
+    "get_screen_ea",
+    "get_func",
+    "get_func_name",
+    "msg",
+    "get_name",
+    "get_entry_qty",
+    "get_entry_ordinal",
+    "get_entry",
+    "get_entry_name",
+    "jumpto",
+    "auto_is_ok",
+    "ask_yn",
 }
 
 
@@ -119,3 +130,20 @@ def test_empty_index():
         searcher = WorkflowSearcher(db_path)
         results = searcher.search_workflows("anything")
         assert results == []
+
+
+def test_get_index_info(indexed_db):
+    client = get_client(indexed_db)
+    info = get_index_info(client)
+
+    assert info["workflow_count"] > 0
+    assert info["api_doc_count"] > 0
+
+
+def test_clear_index(indexed_db):
+    client = get_client(indexed_db)
+    clear_index(client)
+    info = get_index_info(client)
+
+    assert info["workflow_count"] == 0
+    assert info["api_doc_count"] == 0
