@@ -77,10 +77,19 @@ Source: python/examples/core/dump_flowchart.py
 3. ida_gdl.FlowChart(...)     [uses func from step 2]
 ```
 
-## Setup
+## Installation
+
+### Runtime (recommended)
 
 ```bash
-# Clone and install
+# Install from PyPI into uv's tool environment
+uv tool install ida-api-mcp
+```
+
+### Development setup
+
+```bash
+# Clone and install (dev only)
 git clone https://github.com/ruotoy/IDA-Sdk-Workflow-MCP.git
 cd IDA-Sdk-Workflow-MCP
 python3.10 -m venv .venv
@@ -147,7 +156,7 @@ ida-api-mcp-admin clear-index --version 84
 #### Claude Code
 
 ```bash
-claude mcp add ida-api-mcp /path/to/IDA-Sdk-Workflow-MCP/.venv/bin/ida-api-mcp
+claude mcp add ida-api-mcp -- uvx --python python3.10 ida-api-mcp
 ```
 
 Or create a `.mcp.json` file in the project root:
@@ -156,8 +165,8 @@ Or create a `.mcp.json` file in the project root:
 {
   "mcpServers": {
     "ida-api-mcp": {
-      "command": "/path/to/IDA-Sdk-Workflow-MCP/.venv/bin/ida-api-mcp",
-      "args": []
+      "command": "uvx",
+      "args": ["--python", "python3.10", "ida-api-mcp"]
     }
   }
 }
@@ -171,21 +180,8 @@ Add to `~/.config/Claude/claude_desktop_config.json` (Linux), `~/Library/Applica
 {
   "mcpServers": {
     "ida-api-mcp": {
-      "command": "/path/to/IDA-Sdk-Workflow-MCP/.venv/bin/ida-api-mcp",
-      "args": []
-    }
-  }
-}
-```
-
-#### After publishing to PyPI
-
-```json
-{
-  "mcpServers": {
-    "ida-api-mcp": {
       "command": "uvx",
-      "args": ["ida-api-mcp"]
+      "args": ["--python", "python3.10", "ida-api-mcp"]
     }
   }
 }
